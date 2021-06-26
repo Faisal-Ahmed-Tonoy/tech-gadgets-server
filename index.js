@@ -1,54 +1,41 @@
 const express = require('express');
 const ObjectId = require("mongodb").ObjectID;
-const app = express()
-const MongoClient = require('mongodb').MongoClient;
-const cors = require('cors');
+
 const bodyParser = require('body-parser');
+const cors = require('cors');
+const MongoClient = require('mongodb').MongoClient;
 require('dotenv').config()
-const port = 5000;
+
+const uri = `mongodb+srv://techUser:user1234@cluster0.p0njw.mongodb.net/$techGadgets?retryWrites=true&w=majority`;
+const app = express()
 app.use(bodyParser.json());
 app.use(cors());
+const port = 5000
 
-const uri = `mongodb+srv://imagebayDb:hello1234@cluster0.p0njw.mongodb.net/imageBay?retryWrites=true&w=majority`;
-console.log(uri);
+
+
+
+
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
-    console.log('connection err', err)
-    const servicesCollection = client.db("imageBay").collection("services");
-    const orderCollection = client.db("imageBay").collection("book");
-    const reviewCollection = client.db("imageBay").collection("review");
-    const adminCollection = client.db("imageBay").collection("admin");
-    console.log('Database Connected')
+    console.log(err);
+    const productsCollection = client.db("techGadgets").collection("products");
+    const orderCollection = client.db("techGadgets").collection("checkOut");
+
     app.get('/', (req, res) => {
-        res.send("Heroku is Working")
-
+        res.send('Heroku is Working')
     })
-    app.get('/services', (req, res) => {
-        servicesCollection.find({})
-            .toArray((err, items) => {
-                res.send(items)
-                console.log('from database', items)
-
+    app.get('/products', (req, res) => {
+        productsCollection.find({})
+            .toArray((err, documents) => {
+                res.send(documents);
             })
-
     })
-    app.get('/service/:id', (req, res) => {
-        servicesCollection.find({ _id: ObjectId(req.params.id) })
+    app.get('/product/:id', (req, res) => {
+        productsCollection.find({ _id: ObjectId(req.params.id) })
             .toArray((err, documents) => {
                 res.send(documents[0]);
             })
-    })
-
-    app.post('/addService', (req, res) => {
-        const newService = req.body;
-        console.log('adding new event:', newService)
-        servicesCollection.insertOne(newService)
-            .then(result => {
-                console.log('inserted count', result.insertedCount)
-                res.send(result.insertedCount > 0)
-            })
-
-
     })
     app.post("/placeOrder", (req, res) => {
         const product = req.body;
@@ -69,39 +56,20 @@ client.connect(err => {
                 res.send(documents);
             })
     })
-    app.post('/addReview', (req, res) => {
-        const newReview = req.body;
-        console.log('adding new event:', newReview)
-        reviewCollection.insertOne(newReview)
+    app.post('/addProducts', (req, res) => {
+        const newProduct = req.body;
+        console.log('adding new event:', newProduct)
+        productsCollection.insertOne(newProduct)
             .then(result => {
                 console.log('inserted count', result.insertedCount)
                 res.send(result.insertedCount > 0)
             })
 
 
-
-
-    })
-
-
-    app.get('/review', (req, res) => {
-        reviewCollection.find()
-            .toArray((err, items) => {
-                res.send(items)
-                console.log('from database', items)
-
-            })
-
-    })
-    app.get('/adminServiceList', (req, res) => {
-        orderCollection.find({})
-            .toArray((err, document) => {
-                res.send(document)
-            })
     })
 
     app.delete("/delete/:id", (req, res) => {
-        servicesCollection.deleteOne({ _id: ObjectId(req.params.id) })
+        productsCollection.deleteOne({ _id: ObjectId(req.params.id) })
             .then(result => {
                 console.log(result);
 
@@ -112,29 +80,8 @@ client.connect(err => {
 
             })
     })
-    app.post('/addAdmin', (req, res) => {
-        const newAdmin = req.body;
-        console.log('adding new event:', newAdmin)
-        adminCollection.insertOne(newAdmin)
-            .then(result => {
-                console.log('inserted count', result.insertedCount)
-                res.send(result.insertedCount > 0)
-            })
-
-
-
-
-    })
-    app.post('/isAdmin', (req, res) => {
-        const email = req.body.email;
-        console.log(email);
-        adminCollection.find({ email: email })
-            .toArray((err, admin) => {
-                res.send(admin.length > 0);
-            });
-    });
-
 
 
 });
+
 app.listen(process.env.PORT || port)
